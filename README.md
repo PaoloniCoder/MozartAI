@@ -1,0 +1,2 @@
+# MozartAI
+Progetto intelligenza artificiale 
