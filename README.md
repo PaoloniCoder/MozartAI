@@ -1,6 +1,6 @@
 # MozartAI
 <p align="center">
-  <img src="./assets/logo.png" alt="Logo del Progetto" width="200">
+  <img src="logo.png" alt="Logo del Progetto" width="200">
 </p>
 
 Progetto intelligenza artificiale 
