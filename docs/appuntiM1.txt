@@ -1,0 +1,9 @@
+in questa pagina si troverranno appunti vari sulla milestone M1 issue 1
+Come è scritto il file (repr mostra anche tab e a capo):
+'clef-G2\tkeySignature-EbM\ttimeSignature-3/4\tnote-Bb5_quarter\tnote-Eb5_eighth\tnote-Bb5_eighth\tnote-C6_eighth\tnote-Bb5_eighth\tbarline\tnote-Ab5_eighth\tnote-Ab5_eighth\trest-sixteenth\tnote-Ab5_sixteenth\tnote-G5_sixteenth\tnote-Ab5_sixteenth\tnote-Bb5_sixteenth\tnote-Ab5_sixteenth\tnote-G5_sixteenth\tnote-Ab5_sixteenth\tbarline\t'
+Spezzato in simboli:
+['clef-G2', 'keySignature-EbM', 'timeSignature-3/4', 'note-Bb5_quarter', 'note-Eb5_eighth', 'note-Bb5_eighth', 'note-C6_eighth', 'note-Bb5_eighth', 'barline', 'note-Ab5_eighth', 'note-Ab5_eighth', 'rest-sixteenth', 'note-Ab5_sixteenth', 'note-G5_sixteenth', 'note-Ab5_sixteenth', 'note-Bb5_sixteenth', 'note-Ab5_sixteenth', 'note-G5_sixteenth', 'note-Ab5_sixteenth', 'barline']
+CELLA 8
+Simboli diversi (senza blank): 1781
+Classi totali per il modello (con blank): 1782
+Sequenza più lunga: 58
