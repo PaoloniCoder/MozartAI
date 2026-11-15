@@ -1,0 +1,50 @@
+# M2 · Primi risultati del modello su foto reali
+
+## Cosa è stato fatto
+Il modello addestrato in M1 è stato applicato ai righi ritagliati
+con `foto_a_righi` (M2-2) da 5 foto di prova. Il codice è in `src/model.py`
+(`foto_a_simboli`: foto -> simboli).
+
+- SER sulla validazione di PrIMuS: ____ (ultima epoca di `last.pt`)
+- Controllo sul codice: su 10 esempi di PrIMuS, ____ identici alla risposta giusta
+- Foto usate: 5 foto **di schermo** (non di carta), tutte con una sola melodia
+
+Tre esempi (immagine + simboli letti): `m2_esempi_modello.png`.
+
+## Cosa sbaglia e perché
+1. Five little ducks (note spesse, linee marcate)
+   viene letta con le altezze giuste; Fra Martino (note piccole, linee sottili) viene
+   persa, anche se è la foto più nitida. Il modello ha visto solo spartiti sintetici di
+   PrIMuS, con uno stile unico: fuori da quello va in difficoltà. (Attenzione: le due
+   foto differiscono anche per inclinazione e numero di note, quindi non è un
+   esperimento controllato.)
+2. **Le teste di nota piccole vengono scambiate per `gracenote`.** In Fra Martino 4 note
+   su 6 sono lette come `gracenote`; nelle abbellimenti le teste sono disegnate più
+   piccole. È un'ipotesi coerente con l'errore, non verificata.
+3. **La sfocatura rompe le righe.** In Prima parte, dopo la binarizzazione, le righe del
+   pentagramma diventano trattini e le teste di nota sono sporche: il modello inventa
+   simboli (tempi multipli, pausa multipla), tipico di un input lontano dai dati di
+   addestramento.
+4. **Chiave, armatura e tempo sono il punto più debole.** Sono sbagliati in tutte e 3
+   le foto, anche in quella che legge bene le note. Ipotesi: il margine sinistro del
+   ritaglio (`margine_x = 1.0`) è una stima e non è stato calibrato su PrIMuS.
+5. **Esperimento (Fra Martino):** ____ (scrivere cosa succede con l'immagine
+   sfumata, ispessita e con entrambe; indicare se chiave, armatura e altezze migliorano).
+
+## Proposte per M5
+- Data augmentation che varii **lo spessore** delle linee e dei segni, la dimensione
+  delle note, la sfocatura e il rumore, oltre a rotazione e luce.
+- Controllare sulla pagina di PrIMuS se Camera-PrIMuS è scaricabile (immagini già
+  deformate) e aggiungerlo all'addestramento.
+- Provare a passare al modello immagini **in grigi** o leggermente sfumate invece del
+  bianco e nero puro.
+- Calibrare `margine_x` misurando i margini laterali di PrIMuS (come già fatto per
+  quelli verticali).
+- Costruire il set di test con risposte scritte a mano (M5-1) e misurare un SER vero.
+- Per la demo: finché non si fa M5, scegliere spartiti con uno stile simile a PrIMuS
+  (note spesse e linee marcate, come Five little ducks).
+
+## Limiti
+- 5 foto di schermo, nessuna di carta stampata.
+- SER stimati a mano su 3 righi, non misurati.
+- Ipotesi non verificate in modo controllato (le foto differiscono per più di un fattore).
