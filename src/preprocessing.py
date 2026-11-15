@@ -1,5 +1,4 @@
 """Pre-elaborazione delle foto di spartiti.
-
 foto -> lista di righi: ogni rigo è un'immagine binaria (uint8, inchiostro 0 su sfondo 255)
 con un solo pentagramma, la chiave a sinistra e nient'altro (niente titoli, sillabe, numeri).
 """
@@ -8,8 +7,7 @@ import numpy as np
 
 LARGHEZZA = 2000   # larghezza di lavoro: tutti i parametri in pixel sono calibrati su questa
 
-
-# ---------------------------------------------------------------- caricamento e pulizia
+#caricamento e pulizia
 def carica(sorgente, larghezza=LARGHEZZA):
     """Percorso (o immagine BGR) -> (colore, grigio) alla larghezza di lavoro."""
     img = cv2.imread(sorgente) if isinstance(sorgente, str) else sorgente
@@ -22,7 +20,6 @@ def carica(sorgente, larghezza=LARGHEZZA):
     grigio = img if img.ndim == 2 else cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     return img, grigio
 
-
 def binarizza(grigio, blur=5, block=51, C=20, min_area=20, max_sottile=150):
     """grigio -> binaria: inchiostro nero (0) su sfondo bianco (255)."""
     g = cv2.GaussianBlur(grigio, (blur, blur), 0)
@@ -32,13 +29,12 @@ def binarizza(grigio, blur=5, block=51, C=20, min_area=20, max_sottile=150):
     area = st[:, cv2.CC_STAT_AREA]
     larg = st[:, cv2.CC_STAT_WIDTH]
     alt = st[:, cv2.CC_STAT_HEIGHT]
-    quasi_quadrato = (larg >= 5) & (larg <= 18) & (alt >= 5) & (alt <= 18)   # tipo punto di valore
+    quasi_quadrato = (larg >= 5) & (larg <= 18) & (alt >= 5) & (alt <= 18)  
     tieni = (area >= max_sottile) | ((area >= min_area) & quasi_quadrato)
     tieni[0] = False
     return np.where(tieni[etichette], 0, 255).astype(np.uint8)
 
-
-# ---------------------------------------------------------------- raddrizzamento
+#raddrizzamento
 def ruota(img, angolo, bordo=255, interp=cv2.INTER_LINEAR):
     """Ruota di 'angolo' gradi (positivo = antiorario) senza tagliare gli angoli."""
     h, w = img.shape[:2]
@@ -50,11 +46,9 @@ def ruota(img, angolo, bordo=255, interp=cv2.INTER_LINEAR):
     return cv2.warpAffine(img, M, (nw, nh), flags=interp,
                           borderMode=cv2.BORDER_CONSTANT, borderValue=bordo)
 
-
 def _punteggio(ink, angolo):
     r = ruota(ink, angolo, bordo=0)
-    return np.var(r.sum(axis=1).astype(np.float64))       # righe nette = varianza alta
-
+    return np.var(r.sum(axis=1).astype(np.float64)) 
 
 def stima_angolo(binaria, max_angolo=10, scala=0.25):
     ink = (binaria == 0).astype(np.float32)
@@ -73,8 +67,7 @@ def raddrizza(binaria):
     r = ruota(binaria, angolo, bordo=255)
     return np.where(r < 128, 0, 255).astype(np.uint8), angolo
 
-
-# ---------------------------------------------------------------- pentagrammi
+#pentagrammi
 def trova_pentagrammi(binaria, soglia_picco=0.3, minimo_assoluto=0.15, salto=3.0):
     """Trova i pentagrammi con la proiezione orizzontale.
 
@@ -124,8 +117,7 @@ def trova_pentagrammi(binaria, soglia_picco=0.3, minimo_assoluto=0.15, salto=3.0
                                 x0=int(colonne[0]), x1=int(colonne[-1])))
     return pentagrammi
 
-
-# ---------------------------------------------------------------- ritaglio
+#ritaglio
 def ritaglia_righi(binaria, pentagrammi, margine=3.5, tolleranza=0.3, margine_x=1.0):
     """Ritaglia ogni pentagramma.
 
@@ -163,8 +155,7 @@ def ritaglia_righi(binaria, pentagrammi, margine=3.5, tolleranza=0.3, margine_x=
         righi.append(pulito[:, max(0, colonne[0] - m):min(w, colonne[-1] + m + 1)])
     return righi
 
-
-# ---------------------------------------------------------------- funzione unica
+#funzione unica
 def foto_a_righi(foto, margine=3.5, con_info=False):
     """Foto (percorso o immagine) -> lista di righi, dall'alto verso il basso.
 
