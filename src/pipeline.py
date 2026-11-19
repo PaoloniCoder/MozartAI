@@ -36,7 +36,7 @@ class Risultato:
         return "\n".join(f"Rigo {i}: " + " ".join(s) for i, s in enumerate(self.simboli, 1))
 
 
-# ---------------------------------------------------------------- modello
+#modello
 def carica_modello_una_volta(percorso, device='cpu'):
     """Restituisce (modello, dizionario numero->simbolo). Dalla seconda chiamata in poi è istantaneo."""
     chiave = (os.path.abspath(str(percorso)), device)
@@ -46,7 +46,7 @@ def carica_modello_una_volta(percorso, device='cpu'):
     return _CACHE_MODELLI[chiave]
 
 
-# ---------------------------------------------------------------- foto
+#foto
 def _prepara_foto(foto, rgb=True):
     """Percorso, bytes, immagine PIL o array -> percorso oppure array BGR (quello che si aspetta OpenCV).
 
@@ -84,7 +84,7 @@ def _prepara_foto(foto, rgb=True):
     raise ValueError("tipo di immagine non supportato")
 
 
-# ---------------------------------------------------------------- pipeline
+#pipeline
 def foto_a_audio(foto, percorso_modello=None, modello=None, tempo=100, device='cpu', rgb=True,
                  applica_armatura=False, gracenote='salta'):
     """Foto di una pagina -> Risultato (righi, simboli, MIDI, audio, messaggio, tempi).
@@ -181,7 +181,7 @@ def foto_a_audio(foto, percorso_modello=None, modello=None, tempo=100, device='c
         ris.tempi['totale'] = time.perf_counter() - inizio
 
 
-# ---------------------------------------------------------------- misura dei tempi
+#misura dei tempi
 def misura_tempi(foto, percorso_modello, ripetizioni=3, **opzioni):
     """Esegue la pipeline più volte e restituisce i tempi medi per fase (il caricamento del modello è escluso)."""
     carica_modello_una_volta(percorso_modello, opzioni.get('device', 'cpu'))     # fuori dalla misura
