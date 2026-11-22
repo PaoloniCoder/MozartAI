@@ -1,9 +1,9 @@
-# Librerie dell'app MozartAI (installa con: pip install -r requirements.txt)
+
 gradio==6.32.0
 numpy
 Pillow
 opencv-python-headless
 pretty_midi
-setuptools<81            # pretty_midi usa pkg_resources
+setuptools<81        
 --extra-index-url https://download.pytorch.org/whl/cpu
-torch                    # versione per CPU (l'app online non ha la GPU)
+torch                  
