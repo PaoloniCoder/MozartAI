@@ -1,0 +1,9 @@
+# Librerie dell'app MozartAI (installa con: pip install -r app/requirements.txt)
+gradio>=4.44
+numpy
+Pillow
+opencv-python-headless
+pretty_midi
+setuptools<81            # pretty_midi usa pkg_resources
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch                    # versione per CPU (l'app online non ha la GPU)
