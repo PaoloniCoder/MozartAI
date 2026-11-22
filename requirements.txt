@@ -1,5 +1,5 @@
 # Librerie dell'app MozartAI (installa con: pip install -r requirements.txt)
-gradio==5.50.0
+gradio==6.32.0
 numpy
 Pillow
 opencv-python-headless

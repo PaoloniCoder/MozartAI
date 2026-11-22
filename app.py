@@ -195,11 +195,8 @@ LIMITI = """
 PIEDE = '<div class="studio-footer">MozartAI · Progetto scolastico di Daniele, Lorenzo e Martino</div>'
 
 
-def crea_app():
-    """Costruisce l'interfaccia Gradio (richiede 'pip install gradio')."""
-    import gradio as gr
-
-    tema = gr.themes.Soft(primary_hue="lime", neutral_hue="slate", radius_size="lg").set(
+def _tema(gr):
+    return gr.themes.Soft(primary_hue="lime", neutral_hue="slate", radius_size="lg").set(
         body_background_fill="#101416", body_background_fill_dark="#101416",
         body_text_color="#f2f4ed", body_text_color_dark="#f2f4ed",
         block_background_fill="#191e21", block_background_fill_dark="#191e21",
@@ -216,6 +213,11 @@ def crea_app():
         slider_color="#b5d96a", slider_color_dark="#b5d96a",
     )
 
+
+def crea_app():
+    """Costruisce l'interfaccia Gradio."""
+    import gradio as gr
+
     def _elabora(foto, strumento, tempo, trasposizione, appoggiature, progress=gr.Progress()):
         progress(0.2, desc="Cerco i pentagrammi e leggo le note…")
         e = elabora_foto(foto, strumento, tempo, trasposizione, appoggiature)
@@ -230,7 +232,7 @@ def crea_app():
             return errore, None, None
         return gr.update(), audio, midi
 
-    with gr.Blocks(theme=tema, css=CSS, js=JS, head=HEAD, title="MozartAI", fill_width=True) as demo:
+    with gr.Blocks(title="MozartAI", fill_width=True) as demo:
         gr.HTML(MARCA, elem_id="studio-brand")
         gr.HTML(HERO, elem_id="studio-hero")
         stato = gr.State([])
@@ -277,11 +279,17 @@ def crea_app():
     return demo
 
 
+def avvia_app(**opzioni):
+    """Avvia l'interfaccia con gli asset grafici, in locale o in Colab."""
+    import gradio as gr
+
+    return crea_app().queue(max_size=8).launch(theme=_tema(gr), css=CSS, js=JS, head=HEAD, **opzioni)
+
+
 def main():
     percorso = precarica()
     print("Modello:", percorso or "NON TROVATO (imposta la variabile MOZART_MODELLO)")
-    demo = crea_app()
-    demo.queue(max_size=8).launch(server_name="0.0.0.0", share=os.environ.get('MOZART_SHARE') == '1')
+    avvia_app(server_name="0.0.0.0", share=os.environ.get('MOZART_SHARE') == '1')
 
 
 if __name__ == "__main__":
