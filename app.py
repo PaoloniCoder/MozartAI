@@ -1,12 +1,11 @@
 """MozartAI · app web (Gradio): fotografa uno spartito, ascolta la melodia.
 
 Avvio:
-    MOZART_MODELLO=/percorso/best.pt python app/app.py            # in locale
-    MOZART_MODELLO=/percorso/best.pt MOZART_SHARE=1 python app/app.py   # con link pubblico temporaneo
+    MOZART_MODELLO=/percorso/best.pt python app.py            # in locale
+    MOZART_MODELLO=/percorso/best.pt MOZART_SHARE=1 python app.py   # con link pubblico temporaneo
 
 La logica (elabora_foto, riascolta, costruisci_audio) non dipende da Gradio: si può provare anche senza interfaccia.
 """
-import base64
 import os
 import sys
 import tempfile
@@ -144,34 +143,44 @@ def riascolta(simboli, strumento, tempo, trasposizione, appoggiature):
 
 
 # ---------------------------------------------------------------- aspetto
-CSS = """
-.gradio-container {max-width: 820px !important; margin: auto !important;}
-.hero {background: linear-gradient(135deg, #4338ca 0%, #7c3aed 55%, #db2777 100%); color: white;
-       border-radius: 22px; padding: 26px 20px; text-align: center; box-shadow: 0 12px 30px rgba(67,56,202,.35);}
-.hero .nota {font-size: 2.6rem; line-height: 1; margin-bottom: 4px;}
-.hero h1 {font-size: 2.3rem; margin: 0 0 6px; color: white !important; letter-spacing: .5px;}
-.hero p {margin: 0; font-size: 1.05rem; opacity: .95; color: white !important;}
-.hero img {height: 70px; border-radius: 14px; margin-bottom: 8px; background: white; padding: 4px;}
-.scheda {border-radius: 18px !important; padding: 14px !important; margin-top: 14px !important;
-         box-shadow: 0 2px 14px rgba(0,0,0,.08);}
-.scheda h3 {margin-top: 0;}
-#bottone-principale {font-size: 1.15rem; padding: 14px; border-radius: 14px; border: none; color: white;
-                     background: linear-gradient(135deg, #4f46e5, #7c3aed);}
-#bottone-principale:hover {filter: brightness(1.08);}
-.piede {text-align: center; opacity: .7; font-size: .85rem; margin: 18px 0 8px;}
-@media (max-width: 600px) {
-  .hero h1 {font-size: 1.7rem;}
-  .gradio-container {padding: 6px !important;}
-}
+ASSET = RADICE / 'app'
+CSS = (ASSET / 'studio.css').read_text(encoding='utf-8')
+JS = (ASSET / 'studio.js').read_text(encoding='utf-8')
+HEAD = """
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11.2.10/swiper-bundle.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css">
+<script defer src="https://cdn.jsdelivr.net/npm/swiper@11.2.10/swiper-bundle.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
 """
 
+MARCA = """
+<header class="studio-bar">
+  <div class="studio-brandmark"><span aria-hidden="true">♪</span>MozartAI</div>
+  <a href="#studio-controls">Analizza uno spartito</a>
+</header>
+"""
+HERO = """
+<section class="studio-hero" aria-labelledby="studio-title">
+  <div class="studio-score" aria-hidden="true"><i></i><i></i><i></i></div>
+  <h1 id="studio-title">Dallo spartito <span>al suono.</span></h1>
+  <p>Carica o fotografa una partitura, scegli uno strumento e ascolta la melodia.</p>
+</section>
+"""
 CONSIGLI = """
-**Per una foto che funziona:**
-- 💡 tanta luce, senza ombre sullo spartito
-- 📐 telefono **parallelo** al foglio, non di taglio
-- 🎼 una **melodia su un solo pentagramma** (non pianoforte a due righi)
-- 🖨️ meglio spartiti **stampati** e semplici
-- ✂️ inquadra solo lo spartito, senza troppo sfondo
+<div class="swiper studio-tips">
+  <ul class="swiper-wrapper">
+    <li class="swiper-slide"><strong>Illumina il foglio</strong>Usa luce uniforme ed evita le ombre.</li>
+    <li class="swiper-slide"><strong>Tieni il telefono parallelo</strong>Inquadra la pagina dall’alto, senza inclinarla.</li>
+    <li class="swiper-slide"><strong>Scegli una melodia semplice</strong>Usa uno spartito stampato su un solo pentagramma.</li>
+    <li class="swiper-slide"><strong>Riempi l’inquadratura</strong>Taglia lo sfondo e lascia visibile tutto lo spartito.</li>
+  </ul>
+  <div class="studio-tip-nav">
+    <button type="button" class="studio-tip-prev" aria-label="Consiglio precedente">←</button>
+    <button type="button" class="studio-tip-next" aria-label="Consiglio successivo">→</button>
+  </div>
+</div>
 """
 
 LIMITI = """
@@ -183,31 +192,29 @@ LIMITI = """
 """
 
 
-def _logo_html():
-    """Logo del progetto dentro l'intestazione (se esiste logo.png nella radice e non è enorme)."""
-    percorso = RADICE / 'logo.png'
-    try:
-        if percorso.exists() and percorso.stat().st_size < 300_000:
-            dati = base64.b64encode(percorso.read_bytes()).decode()
-            return f'<img src="data:image/png;base64,{dati}" alt="logo">'
-    except Exception:
-        pass
-    return '<div class="nota">♪</div>'
-
-
-def _intestazione():
-    return (f'<div class="hero">{_logo_html()}<h1>MozartAI</h1>'
-            '<p>Fotografa uno spartito, ascolta la melodia.</p></div>')
-
-
-PIEDE = '<div class="piede">Progetto scolastico · Daniele, Lorenzo e Martino · riconoscimento musicale con CRNN + CTC</div>'
+PIEDE = '<div class="studio-footer">MozartAI · Progetto scolastico di Daniele, Lorenzo e Martino</div>'
 
 
 def crea_app():
     """Costruisce l'interfaccia Gradio (richiede 'pip install gradio')."""
     import gradio as gr
 
-    tema = gr.themes.Soft(primary_hue="indigo", secondary_hue="violet", neutral_hue="slate", radius_size="lg")
+    tema = gr.themes.Soft(primary_hue="lime", neutral_hue="slate", radius_size="lg").set(
+        body_background_fill="#101416", body_background_fill_dark="#101416",
+        body_text_color="#f2f4ed", body_text_color_dark="#f2f4ed",
+        block_background_fill="#191e21", block_background_fill_dark="#191e21",
+        block_border_color="#353e40", block_border_color_dark="#353e40",
+        block_label_background_fill="#22292b", block_label_background_fill_dark="#22292b",
+        block_label_text_color="#e3ebe2", block_label_text_color_dark="#e3ebe2",
+        block_title_text_color="#f2f4ed", block_title_text_color_dark="#f2f4ed",
+        input_background_fill="#22292b", input_background_fill_dark="#22292b",
+        input_border_color="#414d49", input_border_color_dark="#414d49",
+        background_fill_primary="#191e21", background_fill_primary_dark="#191e21",
+        background_fill_secondary="#22292b", background_fill_secondary_dark="#22292b",
+        button_secondary_background_fill="#2a3334", button_secondary_background_fill_dark="#2a3334",
+        button_secondary_text_color="#f2f4ed", button_secondary_text_color_dark="#f2f4ed",
+        slider_color="#b5d96a", slider_color_dark="#b5d96a",
+    )
 
     def _elabora(foto, strumento, tempo, trasposizione, appoggiature, progress=gr.Progress()):
         progress(0.2, desc="Cerco i pentagrammi e leggo le note…")
@@ -223,28 +230,31 @@ def crea_app():
             return errore, None, None
         return gr.update(), audio, midi
 
-    with gr.Blocks(theme=tema, css=CSS, title="MozartAI") as demo:
-        gr.HTML(_intestazione())
+    with gr.Blocks(theme=tema, css=CSS, js=JS, head=HEAD, title="MozartAI", fill_width=True) as demo:
+        gr.HTML(MARCA, elem_id="studio-brand")
+        gr.HTML(HERO, elem_id="studio-hero")
         stato = gr.State([])
 
-        with gr.Group(elem_classes="scheda"):
-            gr.Markdown("### 1 · Fotografa lo spartito")
-            foto = gr.Image(label="Foto dello spartito", sources=["upload", "webcam"], type="numpy", height=320)
-            with gr.Accordion("💡 Come fare una buona foto", open=False):
-                gr.Markdown(CONSIGLI)
+        with gr.Row(elem_id="studio-controls"):
+            with gr.Column(scale=3, min_width=300, elem_classes="studio-card"):
+                gr.Markdown("## Foto dello spartito")
+                foto = gr.Image(label="Foto dello spartito", show_label=False, sources=["upload", "webcam"],
+                                type="numpy", height=320)
+                with gr.Accordion("Come fare una buona foto", open=False):
+                    gr.HTML(CONSIGLI)
 
-        with gr.Group(elem_classes="scheda"):
-            gr.Markdown("### 2 · Scegli come suonarlo")
-            strumento = gr.Dropdown(choices=NOMI_STRUMENTI, value=STRUMENTO_PREDEFINITO, label="🎻 Strumento")
-            tempo = gr.Slider(40, 200, value=100, step=5, label="⏱️ Velocità (battiti al minuto)")
-            with gr.Accordion("Opzioni avanzate", open=False):
-                trasposizione = gr.Slider(-12, 12, value=0, step=1, label="Trasposizione (semitoni, + = più acuto)")
-                appoggiature = gr.Checkbox(value=False, label="Suona anche le appoggiature (le note piccole)")
-            bottone = gr.Button("🎵 Riconosci e suona", variant="primary", elem_id="bottone-principale")
+            with gr.Column(scale=2, min_width=270, elem_classes="studio-card", elem_id="studio-settings"):
+                gr.Markdown("## Come vuoi suonarlo?")
+                strumento = gr.Dropdown(choices=NOMI_STRUMENTI, value=STRUMENTO_PREDEFINITO, label="Strumento")
+                tempo = gr.Slider(40, 200, value=100, step=5, label="Velocità (battiti al minuto)")
+                with gr.Accordion("Opzioni avanzate", open=False):
+                    trasposizione = gr.Slider(-12, 12, value=0, step=1, label="Trasposizione (semitoni, + = più acuto)")
+                    appoggiature = gr.Checkbox(value=False, label="Suona anche le appoggiature (le note piccole)")
+                bottone = gr.Button("Riconosci e suona", variant="primary", elem_id="bottone-principale")
 
-        with gr.Group(elem_classes="scheda"):
-            gr.Markdown("### 3 · Il risultato")
-            messaggio = gr.Markdown("📷 Scatta una foto o caricane una, poi premi **Riconosci e suona**.")
+        with gr.Group(elem_classes="studio-card"):
+            gr.Markdown("## Il risultato")
+            messaggio = gr.Markdown("Carica o scatta una foto e premi **Riconosci e suona**.", elem_id="studio-status")
             audio = gr.Audio(label="🔊 Ascolta", type="numpy", interactive=False)
             midi = gr.File(label="⬇️ Scarica il file MIDI", interactive=False)
             with gr.Accordion("🔍 Cosa ha capito il modello", open=False):
@@ -253,7 +263,7 @@ def crea_app():
 
         with gr.Accordion("ℹ️ Limiti", open=False):
             gr.Markdown(LIMITI)
-        gr.HTML(PIEDE)
+        gr.HTML(PIEDE, elem_id="studio-footer")
 
         ingressi = [foto, strumento, tempo, trasposizione, appoggiature]
         bottone.click(_elabora, inputs=ingressi, outputs=[messaggio, galleria, testo, audio, midi, stato])
